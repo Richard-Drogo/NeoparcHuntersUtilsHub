@@ -1,5 +1,6 @@
 QT += concurrent
 QT -= gui
+QT += network
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -12,7 +13,8 @@ SOURCES += \
         dinoparcutils.cpp \
         dinoz.cpp \
         main.cpp \
-        maintask.cpp
+        maintask.cpp \
+        neoparcapimanager.cpp
 
 TRANSLATIONS += \
     NeoparcBestDinozSelectorForRaids_fr_FR.ts
@@ -26,4 +28,5 @@ HEADERS += \
     dinoparcutils.h \
     dinoz.h \
     maintask.h \
+    neoparcapimanager.h \
     utilities.h

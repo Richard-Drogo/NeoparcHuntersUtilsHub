@@ -3,6 +3,7 @@
 #include "maintask.h"
 #include "utilities.h"
 #include "dinoparcutils.h"
+#include "neoparcapimanager.h"
 
 #include <QCoreApplication>
 #include <QVector>
@@ -82,16 +83,34 @@ void MainTask::startingPoint(){
                 Utilities::clearConsole();
             }break;
 
-            case 5:{    // Paramètres
+            case 5:{    // Classement Général des dinoz
+                Utilities::clearConsole();
+
+                Utilities::qPrint(tr("Votre token permettant la connexion à l'API : "));
+                QString token;
+                qTextStreamIn.readLineInto(&token);
+
+                QList<QString> overallRanking = NeoparcApiManager::getOverallRanking(token);
+                for(int i = 0; i < overallRanking.size(); i++){
+                    Utilities::qPrint(overallRanking.at(i) + "\n");
+                }
+
+                Utilities::qPrint(tr("Appuyez pour continuer..."));
+                qTextStreamIn.readLineInto(Q_NULLPTR);
+                Utilities::clearConsole();
             }break;
 
-            case 6:{    // On quitte l'application à la sortie de la boucle.
+            case 6:{    // Paramètres
+
+            }break;
+
+            case 7:{    // On quitte l'application à la sortie de la boucle.
             }break;
             }
         } else {
             handleErrorInSelection(allowedFirstMenuChoices);
         }
-    } while(firstMenuChoice != "6");
+    } while(firstMenuChoice != "7");
 
     SetConsoleOutputCP(defaultConsoleOutputCP);
     closeApplication();
@@ -112,11 +131,12 @@ QVector<QString> MainTask::displayFirstLevelMenu(){
     Utilities::qPrint(tr("2 - Importer mes dinoz depuis l'export CSV Neoparc.") + "\n");
     Utilities::qPrint(tr("3 - Créer un dinoz.") + "\n");
     Utilities::qPrint(tr("4 - Simuler un raid.") + "\n");
-    Utilities::qPrint(tr("5 - Paramètres.") + "\n");
-    Utilities::qPrint(tr("6 - Quitter l'application.") + "\n");
+    Utilities::qPrint(tr("5 - Classement général.") + "\n");
+    Utilities::qPrint(tr("6 - Paramètres.") + "\n");
+    Utilities::qPrint(tr("7 - Quitter l'application.") + "\n");
     Utilities::qPrint("\n");
 
-    return QVector<QString>({"1", "2", "3", "4", "5", "6"});
+    return QVector<QString>({"1", "2", "3", "4", "5", "6", "7"});
 }
 
 bool MainTask::getDinozFromCsvFile(bool importAtStart){
@@ -257,11 +277,13 @@ void MainTask::simulateRaid(QTextStream &qTextStreamIn){
     } while((!allowedElements.contains(firstElementString)) || (!allowedElements.contains(secondElementString)) || (!allowedElements.contains(thirdElementString)) || (firstElementString == secondElementString) || (firstElementString == thirdElementString) || (secondElementString == thirdElementString));
 
     QHash<Dinoz *, qint16> mapDinozToBossDamages = QHash<Dinoz *, qint16>();
+
+    qint16 firstRoundResult, secondRoundResult, thirdRoundResult;
     for(qint8 i = 0; i < this->dinoz.length(); i++){
         qint16 damagesToBoss = 0;
 
         qint8 firstRoundFactor = DinoparcUtils::getRoundFactorByElements(this->dinoz[i]->getFirstElement(), firstElementString.toInt());
-        qint16 firstRoundResult, secondRoundResult, thirdRoundResult;
+
 
         qint16 yourDinozFirstElementPower = this->dinoz[i]->getFirstElementPower();
         if (firstRoundFactor < 0) {
@@ -340,11 +362,15 @@ void MainTask::simulateRaid(QTextStream &qTextStreamIn){
     }
 
     boolean victory = ((firstRoundResult + secondRoundResult + thirdRoundResult) > 0);
+
     Utilities::qPrint("\n");
+    if(victory){
+        Utilities::qPrint(tr("Si vous utilisez le dinoz conseillé, vous gagnez le combat."));
+    } else {
+        Utilities::qPrint(tr("Aucun de vos dinoz ne permet de remporter le combat..."));
+    }
+
     Utilities::qPrint(tr("Le dinoz idéal pour ce raid est ") + this->dinoz[maxDamageDinozIndex]->getName() + tr(" avec ") + QString::number(mapDinozToBossDamages[this->dinoz[maxDamageDinozIndex]]) + tr(" dégâts par tour."));
     Utilities::qPrint(tr("Vos gains par combat seront situés dans l'intervalle suivant : ") + "[" + QString::number(moneyMin) + ";" + QString::number(moneyMax) + "]");
 }
 
-qint16 MainTask::getMoneyFromRaid(qint16 damagesDealtToRaidBoss){
-
-}
