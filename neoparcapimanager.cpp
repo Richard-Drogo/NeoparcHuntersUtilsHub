@@ -14,7 +14,7 @@ const QList<QString> NeoparcApiManager::URL_RANKING_RESSOURCES = {
     "Hippoclamp",
     "Rokky",
     "Pigmou",
-    "WanWan",
+    "Wanwan",
     "Goupignon",
     "Kump",
     "Pteroz",
@@ -39,15 +39,16 @@ const QMap<qint8, qint8> NeoparcApiManager::RANKING_POSITION_MAPPED_TO_SCORE = {
     {9, 1},
     {10, 1}
 };
+QString NeoparcApiManager::token = "";
 
 NeoparcApiManager::NeoparcApiManager(QObject *parent) : QObject(parent)
 {
 
 }
 
-QList<QString> NeoparcApiManager::getOverallRanking(QString token){
+QList<QString> NeoparcApiManager::getOverallRanking(){
     QList<QString> overallRanking;
-    QList<QJsonDocument> rankingApiResponses = NeoparcApiManager::getRankingApiResponses(token);
+    QList<QJsonDocument> rankingApiResponses = NeoparcApiManager::getRankingApiResponses();
 
     QMap<QString, qint16> playerRanking;
     foreach (const QJsonDocument &rankingApiResponse, rankingApiResponses) {
@@ -55,18 +56,21 @@ QList<QString> NeoparcApiManager::getOverallRanking(QString token){
             QJsonArray rankingJsonArray = rankingApiResponse.array();
 
             qint8 playerCounter = 1;
-            for (const QJsonValue &value : rankingJsonArray) {
-                if (value.isObject() && playerCounter <= 10) {
-                    QJsonObject jsonObject = value.toObject();
-
-                    QString player = jsonObject["masterName"].toString();
-                    if(playerRanking.contains(player)){
-                        playerRanking[player] += RANKING_POSITION_MAPPED_TO_SCORE[playerCounter];
-                    } else {
-                        playerRanking[player] = RANKING_POSITION_MAPPED_TO_SCORE[playerCounter];
+            if(rankingJsonArray.size() == 0){
+                qDebug() << "JSON Vide pour " << URL_RANKING_RESSOURCES[rankingApiResponses.indexOf(rankingApiResponse)];
+            } else {
+                for (const QJsonValue &value : rankingJsonArray) {
+                    if (value.isObject() && playerCounter <= 10) {
+                        QJsonObject jsonObject = value.toObject();
+                        QString player = jsonObject["masterName"].toString();
+                        if(playerRanking.contains(player)){
+                            playerRanking[player] += RANKING_POSITION_MAPPED_TO_SCORE[playerCounter];
+                        } else {
+                            playerRanking[player] = RANKING_POSITION_MAPPED_TO_SCORE[playerCounter];
+                        }
                     }
+                    playerCounter++;
                 }
-                playerCounter++;
             }
         } else {
             qDebug() << "Erreur d'analyse JSON";
@@ -84,7 +88,7 @@ QList<QString> NeoparcApiManager::getOverallRanking(QString token){
 
     int count = 0;
     for (const QString &player : sortedPlayers) {
-        QString playerOverallRanking = "[" + QString::number(count + 1) + "]\t" + player + " : \t" + QString::number(playerRanking[player]);
+        QString playerOverallRanking = QString("[%1]\t%2:\t%3").arg(count + 1, 2).arg(player, -15).arg(playerRanking[player]);
         overallRanking.append(playerOverallRanking);
         ++count;
         if (count == NUMBER_OF_PLAYERS_TO_SHOW) {
@@ -94,7 +98,7 @@ QList<QString> NeoparcApiManager::getOverallRanking(QString token){
     return overallRanking;
 }
 
-QList<QJsonDocument> NeoparcApiManager::getRankingApiResponses(QString token){
+QList<QJsonDocument> NeoparcApiManager::getRankingApiResponses(){
     QList<QJsonDocument> rankingApiResponses;
 
     foreach (const QString &rankingResource, NeoparcApiManager::URL_RANKING_RESSOURCES) {
@@ -102,7 +106,7 @@ QList<QJsonDocument> NeoparcApiManager::getRankingApiResponses(QString token){
         QUrlQuery query;
         url.setQuery(query);
         QNetworkRequest request(url);
-        QString authHeaderValue = "Bearer " + token;
+        QString authHeaderValue = "Bearer " + NeoparcApiManager::getToken();
         request.setRawHeader("Authorization", authHeaderValue.toLocal8Bit());
         QNetworkAccessManager manager;
         QNetworkReply *reply = manager.get(request);

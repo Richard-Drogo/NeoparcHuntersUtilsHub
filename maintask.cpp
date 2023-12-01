@@ -26,7 +26,6 @@ MainTask::~MainTask(){
 
 
 void MainTask::startingPoint(){
-
     uint defaultConsoleOutputCP = GetConsoleOutputCP();
     SetConsoleOutputCP(CP_UTF8);
 
@@ -86,11 +85,8 @@ void MainTask::startingPoint(){
             case 5:{    // Classement Général des dinoz
                 Utilities::clearConsole();
 
-                Utilities::qPrint(tr("Votre token permettant la connexion à l'API : "));
-                QString token;
-                qTextStreamIn.readLineInto(&token);
-
-                QList<QString> overallRanking = NeoparcApiManager::getOverallRanking(token);
+                promptToken(qTextStreamIn);
+                QList<QString> overallRanking = NeoparcApiManager::getOverallRanking();
                 for(int i = 0; i < overallRanking.size(); i++){
                     Utilities::qPrint(overallRanking.at(i) + "\n");
                 }
@@ -374,3 +370,11 @@ void MainTask::simulateRaid(QTextStream &qTextStreamIn){
     Utilities::qPrint(tr("Vos gains par combat seront situés dans l'intervalle suivant : ") + "[" + QString::number(moneyMin) + ";" + QString::number(moneyMax) + "]");
 }
 
+void MainTask::promptToken(QTextStream &qTextStreamIn){
+    if(NeoparcApiManager::getToken().trimmed().size() == 0){
+        Utilities::qPrint(tr("Votre token permettant la connexion à l'API : "));
+        QString token;
+        qTextStreamIn.readLineInto(&token);
+        NeoparcApiManager::setToken(token);
+    }
+}

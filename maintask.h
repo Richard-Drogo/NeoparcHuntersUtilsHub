@@ -6,6 +6,7 @@
 #include <QList>
 
 #include "dinoz.h"
+#include "neoparcapimanager.h"
 
 class MainTask : public QObject
 {
@@ -30,6 +31,7 @@ private:
     void createDinoz(QTextStream &);
     void simulateRaid(QTextStream &);
     qint16 getMoneyFromRaid(qint16 damagesDealtToRaidBoss);
+    void promptToken(QTextStream &);
 
 public Q_SLOTS:
     void closeApplication() { Q_EMIT quit(); };
